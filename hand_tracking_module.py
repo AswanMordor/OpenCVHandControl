@@ -1,9 +1,11 @@
+import math
+
 import cv2
 import mediapipe as mp
 import time
 
 
-def find_all_positions(img, hand_landmarks):
+def find_all_positions(img, hand_landmarks) -> dict:
     positions = {}
     for landmark_id, landmark in enumerate(hand_landmarks.landmark):
         pixel_x, pixel_y = find_position(img, landmark)
@@ -11,16 +13,16 @@ def find_all_positions(img, hand_landmarks):
     return positions
 
 
-def find_position(img, landmark):
+def find_position(img, landmark) -> (int, int):
     display_height, display_width, display_channel = img.shape
     return int(display_width * landmark.x), int(display_height * landmark.y)
 
 
-def within_tolerance(tolerance, **args: int):
-    if len(args) > 2:
+def within_tolerance(tolerance, *args: int) -> bool:
+    if len(args) < 2:
         return True
-    sorted_positions = sorted(args.values())
-    return (sorted_positions[-1] - sorted_positions[0]) <= tolerance
+    sorted_positions = sorted(args)
+    return math.fabs(sorted_positions[-1] - sorted_positions[0]) <= tolerance
 
 
 class HandDetector:
