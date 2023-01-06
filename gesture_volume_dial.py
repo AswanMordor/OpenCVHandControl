@@ -36,13 +36,20 @@ detector = hand_tracking.HandDetector(min_detection_confidence=0.7)
 # Keyboard Controller
 keyboard = Controller()
 
+
+# Keyboard Functions
+def click_spacebar():
+    keyboard.press(Key.space)
+    keyboard.release(Key.space)
+
+
 paused = False
 
 
 # Trackbar Callback Method (to change sign tolerance)
-def on_trackbar(val):
+def on_trackbar(trackbar_val):
     global sign_tolerance
-    sign_tolerance = val
+    sign_tolerance = trackbar_val
 
 
 # Trackbar Setup
@@ -50,6 +57,7 @@ cv2.namedWindow(NAMED_WINDOW, cv2.WINDOW_AUTOSIZE)
 trackbar_name = 'Sign Tolerance Value: %d' % TOLERANCE_MAX
 cv2.createTrackbar(trackbar_name, NAMED_WINDOW, 0, TOLERANCE_MAX, on_trackbar)
 
+# The Running Loop
 while True:
     success, img = cap.read()
     img, results, hands = detector.find_hands(img)
@@ -58,6 +66,7 @@ while True:
         for landmarks in hands:
             positions = hand_tracking.find_all_positions(img, landmarks)
 
+            # Assigning Finger Coordinates from Positions Dictionary
             thumb_tip_x, thumb_tip_y = positions[THUMB_TIP]
             index_tip_x, index_tip_y = positions[INDEX_FINGER_TIP]
             middle_tip_x, middle_tip_y = positions[MIDDLE_FINGER_TIP]
@@ -71,6 +80,7 @@ while True:
                     hand_tracking.within_tolerance(sign_tolerance, ring_tip_x, thumb_tip_x, middle_tip_x) and
                     hand_tracking.within_tolerance(sign_tolerance, ring_tip_y, thumb_tip_y, middle_tip_y)
             ):
+                # Creating UI for Volume Control
                 center_circle_color = LIGHT_GREEN if length < MUTE_TOLERANCE else BLUE
                 cv2.circle(img, (center_x, center_y), 10, center_circle_color, cv2.FILLED)
                 cv2.circle(img, (center_x, center_y), 15, center_circle_color, cv2.BORDER_DEFAULT)
@@ -81,21 +91,21 @@ while True:
                             (center_x + 20, center_y + 10),
                             cv2.FONT_HERSHEY_PLAIN, 3,
                             BLUE, thickness=5)
+                # Setting Volume from Length / 3 - Via Applescript
                 osascript.osascript("set volume output volume {}".format(length / 3))  # this only works for Mac
 
+                # Pausing and Un-Pausing Logic
                 if (
-                        math.fabs(pinky_tip_x - thumb_tip_x) <= sign_tolerance + 30 and
-                        math.fabs(pinky_tip_y - thumb_tip_y) <= sign_tolerance
+                        hand_tracking.within_tolerance(sign_tolerance + 30, pinky_tip_x, thumb_tip_x) and
+                        hand_tracking.within_tolerance(sign_tolerance, pinky_tip_y, thumb_tip_y)
                 ):
                     if not paused:
                         cv2.circle(img, (pinky_tip_x, pinky_tip_y), 15, PURPLE, cv2.FILLED)
-                        keyboard.press(Key.space)
-                        keyboard.release(Key.space)
+                        click_spacebar()
                         paused = True
                 elif paused:
                     cv2.circle(img, (pinky_tip_x, pinky_tip_y), 15, WHITE, cv2.FILLED)
-                    keyboard.press(Key.space)
-                    keyboard.release(Key.space)
+                    click_spacebar()
                     paused = False
 
     current_time = time.time()
