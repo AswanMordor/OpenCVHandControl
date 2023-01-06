@@ -23,15 +23,32 @@ CAMERA_WIDTH, CAMERA_HEIGHT = 1280, 720
 
 # Tolerances
 MUTE_TOLERANCE = 80
-SIGN_TOLERANCE = 100
+sign_tolerance = 100
+TOLERANCE_MAX = 200
 
+# Open CV Properties
+NAMED_WINDOW = 'Image'
 cap = cv2.VideoCapture(0)
 cap.set(CAMERA_WIDTH, CAMERA_HEIGHT)
 previous_time = 0
 detector = hand_tracking.HandDetector(min_detection_confidence=0.7)
+
+# Keyboard Controller
 keyboard = Controller()
 
 paused = False
+
+
+# Trackbar Callback Method (to change sign tolerance)
+def on_trackbar(val):
+    global sign_tolerance
+    sign_tolerance = val
+
+
+# Trackbar Setup
+cv2.namedWindow(NAMED_WINDOW, cv2.WINDOW_AUTOSIZE)
+trackbar_name = 'Sign Tolerance Value: %d' % TOLERANCE_MAX
+cv2.createTrackbar(trackbar_name, NAMED_WINDOW, 0, TOLERANCE_MAX, on_trackbar)
 
 while True:
     success, img = cap.read()
@@ -51,8 +68,8 @@ while True:
             length = math.hypot(thumb_tip_x - index_tip_x, thumb_tip_y - index_tip_y)
 
             if (
-                hand_tracking.within_tolerance(SIGN_TOLERANCE, ring_tip_x, thumb_tip_x, middle_tip_x) and
-                hand_tracking.within_tolerance(SIGN_TOLERANCE, ring_tip_y, thumb_tip_y, middle_tip_y)
+                    hand_tracking.within_tolerance(sign_tolerance, ring_tip_x, thumb_tip_x, middle_tip_x) and
+                    hand_tracking.within_tolerance(sign_tolerance, ring_tip_y, thumb_tip_y, middle_tip_y)
             ):
                 center_circle_color = LIGHT_GREEN if length < MUTE_TOLERANCE else BLUE
                 cv2.circle(img, (center_x, center_y), 10, center_circle_color, cv2.FILLED)
@@ -67,8 +84,8 @@ while True:
                 osascript.osascript("set volume output volume {}".format(length / 3))  # this only works for Mac
 
                 if (
-                        math.fabs(pinky_tip_x - thumb_tip_x) <= SIGN_TOLERANCE + 30 and
-                        math.fabs(pinky_tip_y - thumb_tip_y) <= SIGN_TOLERANCE
+                        math.fabs(pinky_tip_x - thumb_tip_x) <= sign_tolerance + 30 and
+                        math.fabs(pinky_tip_y - thumb_tip_y) <= sign_tolerance
                 ):
                     if not paused:
                         cv2.circle(img, (pinky_tip_x, pinky_tip_y), 15, PURPLE, cv2.FILLED)
@@ -86,5 +103,5 @@ while True:
     previous_time = current_time
     cv2.putText(img, f'FPS: {int(fps)}', (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, WHITE)
 
-    cv2.imshow('Image', img)
+    cv2.imshow(NAMED_WINDOW, img)
     cv2.waitKey(1)
