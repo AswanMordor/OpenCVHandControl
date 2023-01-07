@@ -39,6 +39,10 @@ keyboard = Controller()
 
 # Keyboard Functions
 def click_spacebar():
+    """
+    Clicks the spacebar, e.g. a press, then a release
+    :return: None
+    """
     keyboard.press(Key.space)
     keyboard.release(Key.space)
 
@@ -48,6 +52,11 @@ paused = False
 
 # Trackbar Callback Method (to change sign tolerance)
 def on_trackbar(trackbar_val):
+    """
+    Sets the sign tolerance to the value selected by the trackbar
+    :param trackbar_val: the value selected by the trackbar
+    :return: None
+    """
     global sign_tolerance
     sign_tolerance = trackbar_val
 
