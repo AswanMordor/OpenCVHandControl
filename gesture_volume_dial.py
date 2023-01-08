@@ -68,7 +68,7 @@ cv2.createTrackbar(trackbar_name, NAMED_WINDOW, 0, TOLERANCE_MAX, on_trackbar)
 
 # The Running Loop
 while True:
-    success, img = cap.read()
+    success, img = cap.read()  # this gives a tuple of whether the read was successful, and the img read from the cam
     img, results, hands = detector.find_hands(img)
 
     if hands:
